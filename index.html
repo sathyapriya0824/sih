@@ -1,0 +1,2141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DVR Forensics | Digital Forensics Platform</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        :root {
+            --bg: #f4f7fb;
+            --sidebar: #101827;
+            --sidebar-hover: #1d2939;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text: #172033;
+            --muted: #667085;
+            --white: #ffffff;
+            --border: #e4e7ec;
+            --success: #12b76a;
+            --warning: #f79009;
+            --danger: #f04438;
+            --purple: #7f56d9;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: var(--sidebar);
+            color: white;
+            padding: 22px 16px;
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px 28px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #2563eb, #7f56d9);
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .brand h2 {
+            font-size: 19px;
+        }
+
+        .brand small {
+            color: #98a2b3;
+            font-size: 11px;
+        }
+
+        .nav-title {
+            color: #667085;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 15px 12px 8px;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #d0d5dd;
+            transition: 0.2s;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--sidebar-hover);
+            color: white;
+        }
+
+        .nav-item.active {
+            border-left: 3px solid #3b82f6;
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            padding: 14px;
+            border-top: 1px solid #293241;
+        }
+
+        .user-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 35px;
+            height: 35px;
+            background: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-mini small {
+            color: #98a2b3;
+        }
+
+        /* MAIN */
+
+        .main {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 70px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .page-title h1 {
+            font-size: 21px;
+        }
+
+        .page-title p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .icon-button {
+            border: 1px solid var(--border);
+            background: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 17px;
+        }
+
+        .status-online {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        .content {
+            padding: 28px;
+        }
+
+        /* SECTIONS */
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* DASHBOARD CARDS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .blue {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .green {
+            background: #ecfdf3;
+            color: #12b76a;
+        }
+
+        .orange {
+            background: #fffaeb;
+            color: #f79009;
+        }
+
+        .red {
+            background: #fef3f2;
+            color: #f04438;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 14px;
+        }
+
+        .stat-change {
+            margin-top: 7px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* GRID */
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+        }
+
+        .card-header span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* SCANNER */
+
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: 0.2s;
+            cursor: pointer;
+            background: #fafcff;
+        }
+
+        .upload-box:hover {
+            border-color: var(--primary);
+            background: #f8fbff;
+        }
+
+        .upload-icon {
+            width: 58px;
+            height: 58px;
+            background: #eff6ff;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+            font-size: 25px;
+        }
+
+        .upload-box h3 {
+            margin-top: 16px;
+            font-size: 16px;
+        }
+
+        .upload-box p {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 8px 0 18px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-danger {
+            background: #fef3f2;
+            color: var(--danger);
+            border: 1px solid #fecdca;
+        }
+
+        /* RISK */
+
+        .risk-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .risk-circle {
+            width: 145px;
+            height: 145px;
+            border-radius: 50%;
+            border: 13px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .risk-circle strong {
+            font-size: 35px;
+        }
+
+        .risk-circle span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* TABLE */
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 13px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        th {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            color: #027a48;
+            background: #ecfdf3;
+        }
+
+        .badge-warning {
+            color: #b54708;
+            background: #fffaeb;
+        }
+
+        .badge-danger {
+            color: #b42318;
+            background: #fef3f2;
+        }
+
+        /* ANALYSIS */
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .analysis-item {
+            border: 1px solid var(--border);
+            padding: 17px;
+            border-radius: 10px;
+        }
+
+        .analysis-item h4 {
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .analysis-item p {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .progress {
+            height: 7px;
+            background: #eaecf0;
+            border-radius: 10px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background: var(--primary);
+        }
+
+        /* REPORT */
+
+        .report-header {
+            background: linear-gradient(135deg, #172554, #1e40af);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .report-header h2 {
+            margin-bottom: 7px;
+        }
+
+        .report-header p {
+            color: #bfdbfe;
+            font-size: 13px;
+        }
+
+        .report-section {
+            border-bottom: 1px solid var(--border);
+            padding: 18px 0;
+        }
+
+        .report-section:last-child {
+            border-bottom: none;
+        }
+
+        .report-section h4 {
+            margin-bottom: 8px;
+        }
+
+        .report-section p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* SEARCH */
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 11px 13px;
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+        }
+
+        /* TOAST */
+
+        .toast {
+            position: fixed;
+            right: 25px;
+            bottom: 25px;
+            background: #101828;
+            color: white;
+            padding: 14px 18px;
+            border-radius: 9px;
+            font-size: 13px;
+            display: none;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* MODAL */
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(16, 24, 40, 0.55);
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 520px;
+            border-radius: 14px;
+            padding: 25px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+        }
+
+        /* MOBILE */
+
+        .mobile-menu {
+            display: none;
+            border: none;
+            background: white;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 1000px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .content {
+                padding: 18px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-online {
+                display: none;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+        <div class="brand-logo">DF</div>
+        <div>
+            <h2>DVR Forensics</h2>
+            <small>Digital Investigation</small>
+        </div>
+    </div>
+
+    <div class="nav-title">Main</div>
+
+    <div class="nav-item active" onclick="showSection('dashboard', this)">
+        <span class="nav-icon">▦</span>
+        Dashboard
+    </div>
+
+    <div class="nav-item" onclick="showSection('scanner', this)">
+        <span class="nav-icon">⌕</span>
+        Evidence Scanner
+    </div>
+
+    <div class="nav-item" onclick="showSection('analysis', this)">
+        <span class="nav-icon">◈</span>
+        Analysis
+    </div>
+
+    <div class="nav-item" onclick="showSection('reports', this)">
+        <span class="nav-icon">▤</span>
+        Reports
+    </div>
+
+    <div class="nav-title">Management</div>
+
+    <div class="nav-item" onclick="showSection('history', this)">
+        <span class="nav-icon">◷</span>
+        Investigation History
+    </div>
+
+    <div class="nav-item" onclick="showSection('threatintel', this)">
+        <span class="nav-icon">⚠</span>
+        Threat Intelligence
+    </div>
+
+    <div class="nav-item" onclick="openSettings()">
+        <span class="nav-icon">⚙</span>
+        Settings
+    </div>
+
+    <div class="sidebar-footer">
+
+        <div class="user-mini">
+            <div class="avatar">SP</div>
+
+            <div>
+                <strong>Security Analyst</strong>
+                <br>
+                <small>Administrator</small>
+            </div>
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+    <header class="topbar">
+
+        <div style="display:flex;align-items:center;gap:15px;">
+
+            <button class="mobile-menu" onclick="toggleSidebar()">☰</button>
+
+            <div class="page-title">
+                <h1 id="pageTitle">Forensics Dashboard</h1>
+                <p id="pageSubtitle">Digital evidence investigation platform</p>
+            </div>
+
+        </div>
+
+        <div class="top-actions">
+
+            <div class="status-online">
+                <span class="status-dot"></span>
+                System Online
+            </div>
+
+            <button class="icon-button" onclick="showToast('No new notifications')">
+                🔔
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <div class="content">
+
+
+        <!-- DASHBOARD -->
+
+        <section class="section active" id="dashboard">
+
+            <div class="stats">
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+                        <span class="stat-label">Total Investigations</span>
+                        <div class="stat-icon blue">⌕</div>
+                    </div>
+
+                    <div class="stat-value" id="totalInvestigations">128</div>
+
+                    <div class="stat-change">
+                        +12 this month
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+                        <span class="stat-label">Evidence Files</span>
+                        <div class="stat-icon green">▣</div>
+                    </div>
+
+                    <div class="stat-value" id="totalEvidence">1,842</div>
+
+                    <div class="stat-change">
+                        Files analyzed
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+                        <span class="stat-label">Threats Detected</span>
+                        <div class="stat-icon red">⚠</div>
+                    </div>
+
+                    <div class="stat-value" id="threatsDetected">37</div>
+
+                    <div class="stat-change">
+                        Requires investigation
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+                        <span class="stat-label">Cases Resolved</span>
+                        <div class="stat-icon green">✓</div>
+                    </div>
+
+                    <div class="stat-value">91</div>
+
+                    <div class="stat-change">
+                        71% resolution rate
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="grid-2">
+
+                <div class="card">
+
+                    <div class="card-header">
+
+                        <div>
+                            <h3>Recent Investigations</h3>
+                            <span>Latest forensic activities</span>
+                        </div>
+
+                        <button class="btn btn-secondary"
+                                onclick="showSection('history')">
+                            View All
+                        </button>
+
+                    </div>
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Evidence</th>
+                                    <th>Status</th>
+                                    <th>Risk</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                <tr>
+                                    <td>#INV-1028</td>
+                                    <td>disk-image.E01</td>
+                                    <td>
+                                        <span class="badge badge-success">
+                                            Completed
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-danger">
+                                            High
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>#INV-1027</td>
+                                    <td>memory-dump.raw</td>
+                                    <td>
+                                        <span class="badge badge-warning">
+                                            Processing
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-warning">
+                                            Medium
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>#INV-1026</td>
+                                    <td>mobile-backup.zip</td>
+                                    <td>
+                                        <span class="badge badge-success">
+                                            Completed
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-success">
+                                            Low
+                                        </span>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <div>
+                            <h3>Risk Overview</h3>
+                            <span>Current investigation risk</span>
+                        </div>
+                    </div>
+
+                    <div class="risk-container">
+
+                        <div class="risk-circle">
+                            <strong id="riskValue">68</strong>
+                            <span>Risk Score</span>
+                        </div>
+
+                    </div>
+
+                    <div style="text-align:center;">
+                        <span class="badge badge-danger">
+                            Elevated Risk
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>Forensic Capabilities</h3>
+                        <span>Available investigation modules</span>
+                    </div>
+                </div>
+
+                <div class="analysis-grid">
+
+                    <div class="analysis-item">
+                        <h4>▣ File Analysis</h4>
+                        <p>Analyze file metadata, hashes and file signatures.</p>
+                        <div class="progress">
+                            <div class="progress-bar" style="width:92%"></div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-item">
+                        <h4>◈ Memory Analysis</h4>
+                        <p>Inspect memory artifacts and running processes.</p>
+                        <div class="progress">
+                            <div class="progress-bar" style="width:78%"></div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-item">
+                        <h4>⌁ Network Analysis</h4>
+                        <p>Investigate network connections and traffic indicators.</p>
+                        <div class="progress">
+                            <div class="progress-bar" style="width:86%"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- SCANNER -->
+
+        <section class="section" id="scanner">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Evidence Scanner</h3>
+                        <span>Upload digital evidence for analysis</span>
+                    </div>
+
+                    <span class="badge badge-success">
+                        Scanner Ready
+                    </span>
+
+                </div>
+
+
+                <label class="upload-box" for="fileInput">
+
+                    <div class="upload-icon">
+                        ↑
+                    </div>
+
+                    <h3>Drop evidence file here</h3>
+
+                    <p>
+                        Supported formats: E01, DD, RAW, ZIP, PCAP, LOG, TXT, PDF
+                    </p>
+
+                    <span class="btn btn-primary">
+                        Select Evidence
+                    </span>
+
+                </label>
+
+                <input
+                    type="file"
+                    id="fileInput"
+                    onchange="handleFile(event)"
+                >
+
+
+                <div id="fileDetails"
+                     style="display:none;margin-top:20px;">
+
+                    <div class="card"
+                         style="background:#f8fafc;margin:0;">
+
+                        <div style="display:flex;
+                                    justify-content:space-between;
+                                    align-items:center;">
+
+                            <div>
+                                <strong id="fileName">
+                                    evidence.dat
+                                </strong>
+
+                                <p id="fileSize"
+                                   style="color:#667085;
+                                          font-size:12px;
+                                          margin-top:5px;">
+                                </p>
+                            </div>
+
+                            <button class="btn btn-primary"
+                                    onclick="startScan()">
+                                Start Scan
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div id="scanProgress"
+                     style="display:none;margin-top:20px;">
+
+                    <div style="display:flex;
+                                justify-content:space-between;
+                                font-size:13px;">
+
+                        <strong>Analyzing evidence...</strong>
+                        <span id="progressText">0%</span>
+
+                    </div>
+
+                    <div class="progress"
+                         style="height:10px;margin-top:10px;">
+
+                        <div class="progress-bar"
+                             id="scanProgressBar"
+                             style="width:0%;">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="grid-2">
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <div>
+                            <h3>Analysis Checks</h3>
+                            <span>Automated forensic checks</span>
+                        </div>
+                    </div>
+
+                    <div class="analysis-grid"
+                         style="grid-template-columns:1fr 1fr;">
+
+                        <div class="analysis-item">
+                            <h4>✓ File Signature</h4>
+                            <p>Identify actual file type.</p>
+                        </div>
+
+                        <div class="analysis-item">
+                            <h4>✓ SHA-256 Hash</h4>
+                            <p>Generate evidence fingerprint.</p>
+                        </div>
+
+                        <div class="analysis-item">
+                            <h4>✓ Metadata</h4>
+                            <p>Extract timestamps and attributes.</p>
+                        </div>
+
+                        <div class="analysis-item">
+                            <h4>✓ Indicators</h4>
+                            <p>Search for suspicious artifacts.</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <div>
+                            <h3>Chain of Custody</h3>
+                            <span>Evidence tracking</span>
+                        </div>
+                    </div>
+
+                    <div style="font-size:13px;line-height:2;">
+
+                        <p>✓ Evidence received</p>
+                        <p>✓ Evidence registered</p>
+                        <p>○ Analysis pending</p>
+                        <p>○ Report generated</p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ANALYSIS -->
+
+        <section class="section" id="analysis">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Forensic Analysis</h3>
+                        <span>Investigation results and indicators</span>
+                    </div>
+
+                    <button class="btn btn-primary"
+                            onclick="generateReport()">
+                        Generate Report
+                    </button>
+
+                </div>
+
+
+                <div class="stats">
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            Files Examined
+                        </span>
+
+                        <div class="stat-value">
+                            1,248
+                        </div>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            Suspicious Files
+                        </span>
+
+                        <div class="stat-value"
+                             style="color:#f04438;">
+                            24
+                        </div>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            Indicators
+                        </span>
+
+                        <div class="stat-value">
+                            67
+                        </div>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            Confidence
+                        </span>
+
+                        <div class="stat-value"
+                             style="color:#12b76a;">
+                            94%
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-header">
+                    <div>
+                        <h3>Detected Indicators</h3>
+                        <span>Potential forensic findings</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Indicator</th>
+                                <th>Category</th>
+                                <th>Severity</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>Suspicious executable</td>
+                                <td>Malware</td>
+                                <td>
+                                    <span class="badge badge-danger">
+                                        High
+                                    </span>
+                                </td>
+                                <td>96%</td>
+                                <td>Detected</td>
+                            </tr>
+
+                            <tr>
+                                <td>Unusual network connection</td>
+                                <td>Network</td>
+                                <td>
+                                    <span class="badge badge-warning">
+                                        Medium
+                                    </span>
+                                </td>
+                                <td>89%</td>
+                                <td>Detected</td>
+                            </tr>
+
+                            <tr>
+                                <td>Modified system file</td>
+                                <td>Integrity</td>
+                                <td>
+                                    <span class="badge badge-warning">
+                                        Medium
+                                    </span>
+                                </td>
+                                <td>91%</td>
+                                <td>Detected</td>
+                            </tr>
+
+                            <tr>
+                                <td>Normal system log</td>
+                                <td>Log</td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        Low
+                                    </span>
+                                </td>
+                                <td>98%</td>
+                                <td>Reviewed</td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- REPORTS -->
+
+        <section class="section" id="reports">
+
+            <div class="report-header">
+
+                <h2>Digital Forensic Investigation Report</h2>
+
+                <p>
+                    Case #INV-1028 · Generated automatically by DVR Forensics
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="report-section">
+
+                    <h4>1. Investigation Summary</h4>
+
+                    <p>
+                        The submitted evidence was analyzed using automated
+                        digital forensic checks. The investigation identified
+                        several indicators requiring further examination.
+                    </p>
+
+                </div>
+
+
+                <div class="report-section">
+
+                    <h4>2. Evidence Information</h4>
+
+                    <p>
+                        Evidence type: Digital disk image<br>
+                        Evidence status: Verified<br>
+                        Integrity check: Passed<br>
+                        Analysis status: Completed
+                    </p>
+
+                </div>
+
+
+                <div class="report-section">
+
+                    <h4>3. Findings</h4>
+
+                    <p>
+                        The analysis detected suspicious files, unusual
+                        network activity and modified system artifacts.
+                        Each indicator has been assigned a confidence score
+                        for analyst review.
+                    </p>
+
+                </div>
+
+
+                <div class="report-section">
+
+                    <h4>4. Hash Verification</h4>
+
+                    <p>
+                        SHA-256:
+                        7b3c8d2e9f4a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c
+                    </p>
+
+                </div>
+
+
+                <div class="report-section">
+
+                    <h4>5. Conclusion</h4>
+
+                    <p>
+                        The evidence has been successfully processed.
+                        Analysts should review the high-severity indicators
+                        before making an investigation conclusion.
+                    </p>
+
+                </div>
+
+
+                <button class="btn btn-primary"
+                        onclick="downloadReport()">
+                    Download Report
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- HISTORY -->
+
+        <section class="section" id="history">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Investigation History</h3>
+                        <span>Previously processed evidence</span>
+                    </div>
+
+                    <button class="btn btn-secondary"
+                            onclick="showToast('History refreshed')">
+                        Refresh
+                    </button>
+
+                </div>
+
+
+                <div class="search-box">
+
+                    <input
+                        type="text"
+                        id="historySearch"
+                        placeholder="Search cases..."
+                        onkeyup="searchHistory()"
+                    >
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table id="historyTable">
+
+                        <thead>
+
+                            <tr>
+                                <th>Case ID</th>
+                                <th>File</th>
+                                <th>Date</th>
+                                <th>Analyst</th>
+                                <th>Risk</th>
+                                <th>Status</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>#INV-1028</td>
+                                <td>disk-image.E01</td>
+                                <td>30 Sep 2026</td>
+                                <td>Admin</td>
+                                <td>
+                                    <span class="badge badge-danger">
+                                        High
+                                    </span>
+                                </td>
+                                <td>Completed</td>
+                            </tr>
+
+                            <tr>
+                                <td>#INV-1027</td>
+                                <td>memory-dump.raw</td>
+                                <td>29 Sep 2026</td>
+                                <td>Admin</td>
+                                <td>
+                                    <span class="badge badge-warning">
+                                        Medium
+                                    </span>
+                                </td>
+                                <td>Processing</td>
+                            </tr>
+
+                            <tr>
+                                <td>#INV-1026</td>
+                                <td>mobile-backup.zip</td>
+                                <td>27 Sep 2026</td>
+                                <td>Admin</td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        Low
+                                    </span>
+                                </td>
+                                <td>Completed</td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- THREAT INTELLIGENCE -->
+
+        <section class="section" id="threatintel">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Threat Intelligence</h3>
+                        <span>Indicators observed during investigations</span>
+                    </div>
+
+                    <span class="badge badge-warning">
+                        Monitoring
+                    </span>
+
+                </div>
+
+
+                <div class="stats">
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            IP Indicators
+                        </span>
+
+                        <div class="stat-value">
+                            34
+                        </div>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            File Hashes
+                        </span>
+
+                        <div class="stat-value">
+                            87
+                        </div>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            Domains
+                        </span>
+
+                        <div class="stat-value">
+                            21
+                        </div>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <span class="stat-label">
+                            Alerts
+                        </span>
+
+                        <div class="stat-value"
+                             style="color:#f04438;">
+                            13
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div>
+                        <h3>Threat Indicators</h3>
+                        <span>Potential indicators of compromise</span>
+                    </div>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Indicator</th>
+                                <th>Type</th>
+                                <th>Source</th>
+                                <th>Risk</th>
+                                <th>Action</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>192.0.2.45</td>
+                                <td>IP Address</td>
+                                <td>Internal Analysis</td>
+                                <td>
+                                    <span class="badge badge-danger">
+                                        High
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary"
+                                            onclick="showToast('Indicator details opened')">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>sample-domain.test</td>
+                                <td>Domain</td>
+                                <td>Evidence Analysis</td>
+                                <td>
+                                    <span class="badge badge-warning">
+                                        Medium
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary"
+                                            onclick="showToast('Indicator details opened')">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<!-- SETTINGS MODAL -->
+
+<div class="modal" id="settingsModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3>System Settings</h3>
+
+            <button class="close"
+                    onclick="closeSettings()">
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Analyst Name</label>
+
+            <input
+                type="text"
+                value="Security Analyst"
+                id="analystName"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Theme</label>
+
+            <select>
+                <option>Light</option>
+                <option>Dark</option>
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Automatic Reports</label>
+
+            <select>
+                <option>Enabled</option>
+                <option>Disabled</option>
+            </select>
+
+        </div>
+
+
+        <button class="btn btn-primary"
+                onclick="saveSettings()">
+            Save Settings
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+
+    /* NAVIGATION */
+
+    const pageNames = {
+        dashboard: ["Forensics Dashboard", "Digital evidence investigation platform"],
+        scanner: ["Evidence Scanner", "Upload and analyze digital evidence"],
+        analysis: ["Forensic Analysis", "Investigation findings and indicators"],
+        reports: ["Investigation Reports", "Digital forensic investigation report"],
+        history: ["Investigation History", "Previously processed evidence"],
+        threatintel: ["Threat Intelligence", "Indicators and threat observations"]
+    };
+
+
+    function showSection(sectionId, element) {
+
+        document.querySelectorAll(".section").forEach(section => {
+            section.classList.remove("active");
+        });
+
+        const section = document.getElementById(sectionId);
+
+        if (section) {
+            section.classList.add("active");
+        }
+
+        document.querySelectorAll(".nav-item").forEach(item => {
+            item.classList.remove("active");
+        });
+
+        if (element) {
+            element.classList.add("active");
+        }
+
+        if (pageNames[sectionId]) {
+
+            document.getElementById("pageTitle").textContent =
+                pageNames[sectionId][0];
+
+            document.getElementById("pageSubtitle").textContent =
+                pageNames[sectionId][1];
+
+        }
+
+        document.getElementById("sidebar").classList.remove("open");
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    }
+
+
+    /* MOBILE SIDEBAR */
+
+    function toggleSidebar() {
+
+        document
+            .getElementById("sidebar")
+            .classList.toggle("open");
+
+    }
+
+
+    /* TOAST */
+
+    function showToast(message) {
+
+        const toast = document.getElementById("toast");
+
+        toast.textContent = message;
+
+        toast.style.display = "block";
+
+        setTimeout(() => {
+
+            toast.style.display = "none";
+
+        }, 3000);
+
+    }
+
+
+    /* FILE UPLOAD */
+
+    function handleFile(event) {
+
+        const file = event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        document.getElementById("fileDetails").style.display = "block";
+
+        document.getElementById("fileName").textContent =
+            file.name;
+
+        document.getElementById("fileSize").textContent =
+            formatFileSize(file.size);
+
+        showToast("Evidence file selected");
+
+    }
+
+
+    function formatFileSize(bytes) {
+
+        if (bytes === 0) {
+            return "0 Bytes";
+        }
+
+        const units = [
+            "Bytes",
+            "KB",
+            "MB",
+            "GB"
+        ];
+
+        const index =
+            Math.floor(Math.log(bytes) / Math.log(1024));
+
+        return (
+            (bytes / Math.pow(1024, index)).toFixed(2)
+            + " "
+            + units[index]
+        );
+
+    }
+
+
+    /* SCAN */
+
+    function startScan() {
+
+        const progress =
+            document.getElementById("scanProgress");
+
+        const bar =
+            document.getElementById("scanProgressBar");
+
+        const text =
+            document.getElementById("progressText");
+
+        progress.style.display = "block";
+
+        let value = 0;
+
+        const interval = setInterval(() => {
+
+            value += 5;
+
+            bar.style.width = value + "%";
+
+            text.textContent = value + "%";
+
+            if (value >= 100) {
+
+                clearInterval(interval);
+
+                showToast(
+                    "Forensic scan completed successfully"
+                );
+
+                document.getElementById("threatsDetected")
+                    .textContent = "38";
+
+                document.getElementById("totalEvidence")
+                    .textContent = "1,843";
+
+                setTimeout(() => {
+
+                    showSection("analysis");
+
+                    document.querySelectorAll(".nav-item")
+                        .forEach(item =>
+                            item.classList.remove("active")
+                        );
+
+                    document.querySelectorAll(".nav-item")[3]
+                        .classList.add("active");
+
+                }, 800);
+
+            }
+
+        }, 120);
+
+    }
+
+
+    /* REPORT */
+
+    function generateReport() {
+
+        showSection("reports");
+
+        showToast("Investigation report generated");
+
+    }
+
+
+    function downloadReport() {
+
+        const report = `
+DVR FORENSICS
+Digital Forensic Investigation Report
+
+Case ID: INV-1028
+
+Investigation Summary:
+The submitted evidence was analyzed using automated
+digital forensic checks.
+
+Evidence Status:
+Verified
+
+Integrity:
+Passed
+
+Findings:
+Suspicious files and unusual system artifacts were
+identified during analysis.
+
+Risk:
+Elevated
+
+Report generated by DVR Forensics.
+        `;
+
+        const blob =
+            new Blob([report], {
+                type: "text/plain"
+            });
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+
+        link.download =
+            "DVR-Forensics-Report.txt";
+
+        link.click();
+
+        URL.revokeObjectURL(url);
+
+        showToast("Report downloaded");
+
+    }
+
+
+    /* HISTORY SEARCH */
+
+    function searchHistory() {
+
+        const search =
+            document
+                .getElementById("historySearch")
+                .value
+                .toLowerCase();
+
+        const rows =
+            document.querySelectorAll(
+                "#historyTable tbody tr"
+            );
+
+        rows.forEach(row => {
+
+            const text =
+                row.textContent.toLowerCase();
+
+            row.style.display =
+                text.includes(search)
+                    ? ""
+                    : "none";
+
+        });
+
+    }
+
+
+    /* SETTINGS */
+
+    function openSettings() {
+
+        document.getElementById(
+            "settingsModal"
+        ).style.display = "flex";
+
+    }
+
+
+    function closeSettings() {
+
+        document.getElementById(
+            "settingsModal"
+        ).style.display = "none";
+
+    }
+
+
+    function saveSettings() {
+
+        const name =
+            document.getElementById(
+                "analystName"
+            ).value;
+
+        if (name.trim() !== "") {
+
+            document.querySelector(
+                ".user-mini strong"
+            ).textContent = name;
+
+        }
+
+        closeSettings();
+
+        showToast("Settings saved successfully");
+
+    }
+
+
+    /* CLOSE MODAL WHEN CLICKING OUTSIDE */
+
+    window.addEventListener("click", function(event) {
+
+        const modal =
+            document.getElementById("settingsModal");
+
+        if (event.target === modal) {
+
+            closeSettings();
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
